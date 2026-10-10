@@ -1,11 +1,10 @@
-package tn.esprit.tpfoyer.domaine;
+package tn.esprit.autoloc.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDate;
 
 @Entity
@@ -30,14 +29,13 @@ public class Reservation {
     @Column(nullable = false, length = 20)
     private StatutReservation statut;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vehicule_id")
-    private Vehicule vehicule;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Client client;
 
-    @OneToOne(mappedBy = "reservation")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Vehicule vehicule;
+
+    // Côté inverse du OneToOne : le contrat porte la clé étrangère
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Contrat contrat;
 }
