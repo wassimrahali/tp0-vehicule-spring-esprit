@@ -1,11 +1,10 @@
-package tn.esprit.tpfoyer.domaine;
+package tn.esprit.autoloc.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDate;
 
 @Entity
@@ -23,13 +22,11 @@ public class Maintenance {
     @Column(nullable = false)
     private LocalDate dateDebut;
 
-    @Column(nullable = false)
     private LocalDate dateFin;
 
-    @Column(nullable = false, length = 1000)
+    @Column(length = 255)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vehicule_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Vehicule vehicule;
 }

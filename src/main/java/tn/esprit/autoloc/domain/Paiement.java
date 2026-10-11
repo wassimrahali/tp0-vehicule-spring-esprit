@@ -1,11 +1,10 @@
-package tn.esprit.tpfoyer.domaine;
+package tn.esprit.autoloc.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -24,14 +23,12 @@ public class Paiement {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal montant;
 
-    @Column(nullable = false)
     private LocalDate datePaiement;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ModePaiement modePaiement;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "contrat_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Contrat contrat;
 }
