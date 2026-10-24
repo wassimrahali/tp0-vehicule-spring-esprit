@@ -5,7 +5,7 @@ import tn.esprit.autoloc.domain.Agence;
 
 public interface IAgenceService {
 
-    Agence create(Agence entite);
+    public Agence create(Agence entite);
 
     Agence findById(Long id);
 
