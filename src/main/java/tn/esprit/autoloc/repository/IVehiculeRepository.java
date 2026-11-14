@@ -22,9 +22,6 @@ public interface IVehiculeRepository extends JpaRepository<Vehicule, Long> {
     @Query("select m.idMaintenance from Maintenance m where m.vehicule.idVehicule = :id")
     List<Long> findMaintenanceIds(@Param("id") Long vehiculeId);
 
-    @Query("select r.idReservation from Reservation r where r.vehicule.idVehicule = :id")
-    List<Long> findReservationIds(@Param("id") Long vehiculeId);
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from Vehicule v where v.idVehicule = :id")
     java.util.Optional<Vehicule> findForUpdate(@Param("id") Long vehiculeId);

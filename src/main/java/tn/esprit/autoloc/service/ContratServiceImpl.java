@@ -4,21 +4,27 @@ import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Contrat;
+import tn.esprit.autoloc.dto.ContratDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.repository.IContratRepository;
 import tn.esprit.autoloc.repository.IPaiementRepository;
+import tn.esprit.autoloc.mapper.ContratMapper;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
     private final IPaiementRepository paiementRepository;
+    private final ContratMapper mapper;
 
     @Override
-    public Contrat create(Contrat entite) {
+    public ContratDTO create(ContratDTO dto) {
+        Contrat entite = mapper.toEntity(dto);
         if (entite.getIdContrat() != null) {
             throw new IllegalArgumentException(
                     "Un nouveau contrat ne doit pas avoir d'identifiant");
@@ -32,23 +38,28 @@ public class ContratServiceImpl implements IContratService {
             throw new ResourceConflictException("Cette réservation possède déjà un contrat.");
         }
         entite.getReservation().setContrat(entite);
-        return contratRepository.save(entite);
+        return mapper.toDto(contratRepository.save(entite));
     }
 
     @Override
-    public Contrat findById(Long id) {
+    public ContratDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Contrat findEntity(Long id) {
         return contratRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contrat", id));
     }
 
     @Override
-    public List<Contrat> findAll() {
-        return contratRepository.findAll();
+    public List<ContratDTO> findAll() {
+        return contratRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public Contrat update(Long id, Contrat entite) {
-        Contrat existant = findById(id);
+    public ContratDTO update(Long id, ContratDTO dto) {
+        Contrat entite = mapper.toEntity(dto);
+        Contrat existant = findEntity(id);
         valider(entite);
         existant.setDateSignature(entite.getDateSignature());
         existant.setMontantTotal(entite.getMontantTotal());
@@ -56,13 +67,14 @@ public class ContratServiceImpl implements IContratService {
         if (paiementRepository.totalForContrat(id).compareTo(entite.getMontantTotal()) > 0) {
             throw new ResourceConflictException("Le montant du contrat ne peut pas être inférieur aux paiements reçus.");
         }
-        return contratRepository.save(existant);
+        return mapper.toDto(contratRepository.save(existant));
     }
 
     @Override
-    public Contrat findByReservation(Long reservationId) {
-        return contratRepository.findByReservation_IdReservation(reservationId)
+    public ContratDTO findByReservation(Long reservationId) {
+        Contrat contrat = contratRepository.findByReservation_IdReservation(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contrat associé à la réservation", reservationId));
+        return mapper.toDto(contrat);
     }
 
     @Override

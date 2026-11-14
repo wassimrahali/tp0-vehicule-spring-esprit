@@ -7,16 +7,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tn.esprit.autoloc.domain.CategorieVehicule;
 import tn.esprit.autoloc.domain.StatutVehicule;
 import tn.esprit.autoloc.dto.VehiculeDTO;
-import tn.esprit.autoloc.mapper.AgenceMapper;
-import tn.esprit.autoloc.mapper.EquipementMapper;
-import tn.esprit.autoloc.mapper.MaintenanceMapper;
-import tn.esprit.autoloc.mapper.ReservationMapper;
-import tn.esprit.autoloc.mapper.VehiculeMapper;
-import tn.esprit.autoloc.service.IEquipementService;
 import tn.esprit.autoloc.service.IMaintenanceService;
 import tn.esprit.autoloc.service.IReservationService;
 import tn.esprit.autoloc.service.IVehiculeService;
-import tn.esprit.autoloc.service.IAgenceService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,32 +22,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class VehiculeControllerTest {
     private IVehiculeService vehiculeService;
-    private VehiculeMapper vehiculeMapper;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         vehiculeService = mock(IVehiculeService.class);
-        vehiculeMapper = mock(VehiculeMapper.class);
+        IMaintenanceService maintenanceService = mock(IMaintenanceService.class);
+        IReservationService reservationService = mock(IReservationService.class);
         VehiculeController controller = new VehiculeController(
                 vehiculeService,
-                vehiculeMapper,
-                mock(IEquipementService.class),
-                mock(EquipementMapper.class),
-                mock(IMaintenanceService.class),
-                mock(MaintenanceMapper.class),
-                mock(IReservationService.class),
-                mock(ReservationMapper.class),
-                mock(IAgenceService.class),
-                mock(AgenceMapper.class));
+                maintenanceService,
+                reservationService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void getVehicleRespondsWithDtoIdentifiersInsteadOfJpaRelations() throws Exception {
-        when(vehiculeService.findById(8L)).thenReturn(new tn.esprit.autoloc.domain.Vehicule());
-        when(vehiculeMapper.toDto(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(new VehiculeDTO(8L, "123-TN-4567", "Toyota", "Corolla",
+        when(vehiculeService.findById(8L)).thenReturn(new VehiculeDTO(8L, "123-TN-4567", "Toyota", "Corolla",
                         CategorieVehicule.BERLINE, new BigDecimal("65.00"), StatutVehicule.DISPONIBLE,
                         2L, List.of(4L), List.of(6L), List.of(7L)));
 

@@ -3,43 +3,54 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Equipement;
+import tn.esprit.autoloc.dto.EquipementDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.mapper.EquipementMapper;
 import tn.esprit.autoloc.repository.IEquipementRepository;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EquipementServiceImpl implements IEquipementService {
 
     private final IEquipementRepository equipementRepository;
+    private final EquipementMapper mapper;
 
     @Override
-    public Equipement create(Equipement entite) {
+    public EquipementDTO create(EquipementDTO dto) {
+        Equipement entite = mapper.toEntity(dto);
         if (entite.getIdEquipement() != null) {
             throw new IllegalArgumentException(
                     "Un nouveau equipement ne doit pas avoir d'identifiant");
         }
         valider(entite);
-        return equipementRepository.save(entite);
+        return mapper.toDto(equipementRepository.save(entite));
     }
 
     @Override
-    public Equipement findById(Long id) {
+    public EquipementDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Equipement findEntity(Long id) {
         return equipementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipement", id));
     }
 
     @Override
-    public List<Equipement> findAll() {
-        return equipementRepository.findAll();
+    public List<EquipementDTO> findAll() {
+        return equipementRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public Equipement update(Long id, Equipement entite) {
-        Equipement existant = findById(id);
+    public EquipementDTO update(Long id, EquipementDTO dto) {
+        Equipement entite = mapper.toEntity(dto);
+        Equipement existant = findEntity(id);
         valider(entite);
         existant.setLibelle(entite.getLibelle());
-        return equipementRepository.save(existant);
+        return mapper.toDto(equipementRepository.save(existant));
     }
 
     @Override

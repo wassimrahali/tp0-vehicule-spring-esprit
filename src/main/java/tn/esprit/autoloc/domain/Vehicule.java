@@ -67,4 +67,8 @@ public class Vehicule {
     @OneToMany(mappedBy = "vehicule", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @Schema(description = "Historique des maintenances du véhicule.")
     private List<Maintenance> maintenances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vehicule", fetch = FetchType.LAZY)
+    @Schema(description = "Réservations effectuées pour ce véhicule.")
+    private List<Reservation> reservations = new ArrayList<>();
 }

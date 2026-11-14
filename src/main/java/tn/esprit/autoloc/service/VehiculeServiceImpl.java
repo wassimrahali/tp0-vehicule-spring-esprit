@@ -8,22 +8,33 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.Equipement;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.VehiculeDTO;
+import tn.esprit.autoloc.dto.EquipementDTO;
+import tn.esprit.autoloc.dto.AgenceDTO;
 import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.repository.IAgenceRepository;
 import tn.esprit.autoloc.repository.IEquipementRepository;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
+import tn.esprit.autoloc.mapper.VehiculeMapper;
+import tn.esprit.autoloc.mapper.EquipementMapper;
+import tn.esprit.autoloc.mapper.AgenceMapper;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class VehiculeServiceImpl implements IVehiculeService {
 
     private final IVehiculeRepository vehiculeRepository;
     private final IAgenceRepository agenceRepository;
     private final IEquipementRepository equipementRepository;
+    private final VehiculeMapper mapper;
+    private final EquipementMapper equipementMapper;
+    private final AgenceMapper agenceMapper;
 
     @Override
-    public Vehicule create(Vehicule entite) {
+    public VehiculeDTO create(VehiculeDTO dto) {
+        Vehicule entite = mapper.toEntity(dto);
         if (entite.getIdVehicule() != null) {
             throw new IllegalArgumentException(
                     "Un nouveau vehicule ne doit pas avoir d'identifiant");
@@ -35,23 +46,28 @@ public class VehiculeServiceImpl implements IVehiculeService {
         if (entite.getAgence() == null) {
             throw new IllegalArgumentException("Un véhicule doit appartenir à une agence.");
         }
-        return vehiculeRepository.save(entite);
+        return mapper.toDto(vehiculeRepository.save(entite));
     }
 
     @Override
-    public Vehicule findById(Long id) {
+    public VehiculeDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Vehicule findEntity(Long id) {
         return vehiculeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicule", id));
     }
 
     @Override
-    public List<Vehicule> findAll() {
-        return vehiculeRepository.findAll();
+    public List<VehiculeDTO> findAll() {
+        return vehiculeRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public Vehicule update(Long id, Vehicule entite) {
-        Vehicule existant = findById(id);
+    public VehiculeDTO update(Long id, VehiculeDTO dto) {
+        Vehicule entite = mapper.toEntity(dto);
+        Vehicule existant = findEntity(id);
         valider(entite);
         if (vehiculeRepository.existsByImmatriculationAndIdVehiculeNot(entite.getImmatriculation(), id)) {
             throw new ResourceConflictException("Cette immatriculation est déjà utilisée.");
@@ -66,48 +82,58 @@ public class VehiculeServiceImpl implements IVehiculeService {
         if (entite.getEquipements() != null) {
             existant.setEquipements(new java.util.HashSet<>(entite.getEquipements()));
         }
-        return vehiculeRepository.save(existant);
+        return mapper.toDto(vehiculeRepository.save(existant));
     }
 
     @Override
     @Transactional
-    public Vehicule affecterVehiculeAAgence(Long idVehicule, Long idAgence) {
+    public VehiculeDTO affecterVehiculeAAgence(Long idVehicule, Long idAgence) {
         Vehicule vehicule = vehiculeRepository.findById(idVehicule)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicule", idVehicule));
         Agence agence = agenceRepository.findById(idAgence)
                 .orElseThrow(() -> new ResourceNotFoundException("Agence", idAgence));
 
         vehicule.setAgence(agence);
-        return vehiculeRepository.save(vehicule);
+        return mapper.toDto(vehiculeRepository.save(vehicule));
     }
 
     @Override
-    public List<Vehicule> findByAgence(Long agenceId) {
+    public AgenceDTO findAgence(Long vehiculeId) {
+        Vehicule vehicule = findEntity(vehiculeId);
+        if (vehicule.getAgence() == null) {
+            throw new ResourceNotFoundException("Agence du véhicule", vehiculeId);
+        }
+        return agenceMapper.toDto(vehicule.getAgence());
+    }
+
+    @Override
+    public List<VehiculeDTO> findByAgence(Long agenceId) {
         if (!agenceRepository.existsById(agenceId)) {
             throw new ResourceNotFoundException("Agence", agenceId);
         }
-        return vehiculeRepository.findByAgence_IdAgence(agenceId);
+        return vehiculeRepository.findByAgence_IdAgence(agenceId).stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public List<Vehicule> findByEquipement(Long equipementId) {
+    public List<VehiculeDTO> findByEquipement(Long equipementId) {
         if (!equipementRepository.existsById(equipementId)) {
             throw new ResourceNotFoundException("Equipement", equipementId);
         }
-        return vehiculeRepository.findByEquipements_IdEquipement(equipementId);
+        return vehiculeRepository.findByEquipements_IdEquipement(equipementId).stream().map(mapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Equipement> findEquipements(Long vehiculeId) {
-        findById(vehiculeId);
-        return equipementRepository.findByVehicules_IdVehicule(vehiculeId);
+    public List<EquipementDTO> findEquipements(Long vehiculeId) {
+        findEntity(vehiculeId);
+        return equipementRepository.findByVehicules_IdVehicule(vehiculeId).stream()
+                .map(equipementMapper::toDto).toList();
     }
 
     @Override
     @Transactional
     public void ajouterEquipement(Long vehiculeId, Long equipementId) {
-        Vehicule vehicule = findById(vehiculeId);
+        Vehicule vehicule = findEntity(vehiculeId);
         Equipement equipement = equipementRepository.findById(equipementId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipement", equipementId));
         vehicule.getEquipements().add(equipement);
@@ -117,7 +143,7 @@ public class VehiculeServiceImpl implements IVehiculeService {
     @Override
     @Transactional
     public void retirerEquipement(Long vehiculeId, Long equipementId) {
-        Vehicule vehicule = findById(vehiculeId);
+        Vehicule vehicule = findEntity(vehiculeId);
         Equipement equipement = equipementRepository.findById(equipementId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipement", equipementId));
         vehicule.getEquipements().remove(equipement);
@@ -126,7 +152,7 @@ public class VehiculeServiceImpl implements IVehiculeService {
 
     @Override
     public void retirerDeAgence(Long agenceId, Long vehiculeId) {
-        Vehicule vehicule = findById(vehiculeId);
+        Vehicule vehicule = findEntity(vehiculeId);
         if (vehicule.getAgence() == null || !vehicule.getAgence().getIdAgence().equals(agenceId)) {
             throw new ResourceNotFoundException("Association véhicule/agence", vehiculeId);
         }

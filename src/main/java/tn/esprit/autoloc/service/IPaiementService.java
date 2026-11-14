@@ -2,23 +2,23 @@ package tn.esprit.autoloc.service;
 
 import java.util.List;
 import java.math.BigDecimal;
-import tn.esprit.autoloc.domain.Paiement;
+import tn.esprit.autoloc.dto.PaiementDTO;
 
 public interface IPaiementService {
 
-    Paiement findById(Long id);
+    PaiementDTO findById(Long id);
 
-    List<Paiement> findAll();
+    List<PaiementDTO> findAll();
 
-    Paiement create(Paiement paiement);
+    PaiementDTO create(PaiementDTO paiement);
 
-    Paiement createForContrat(Long contratId, Paiement paiement);
+    PaiementDTO createForContrat(Long contratId, PaiementDTO paiement);
 
-    Paiement update(Long id, Paiement paiement);
+    PaiementDTO update(Long id, PaiementDTO paiement);
 
     void deleteById(Long id);
 
-    List<Paiement> findByContrat(Long contratId);
+    List<PaiementDTO> findByContrat(Long contratId);
 
     BigDecimal totalForContrat(Long contratId);
 

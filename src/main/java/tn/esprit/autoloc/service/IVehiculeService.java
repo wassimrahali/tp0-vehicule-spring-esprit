@@ -3,25 +3,29 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import java.util.List;
 import tn.esprit.autoloc.domain.Equipement;
-import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.VehiculeDTO;
+import tn.esprit.autoloc.dto.EquipementDTO;
+import tn.esprit.autoloc.dto.AgenceDTO;
 
 public interface IVehiculeService {
 
-    Vehicule create(Vehicule entite);
+    VehiculeDTO create(VehiculeDTO entite);
 
-    Vehicule findById(Long id);
+    VehiculeDTO findById(Long id);
 
-    List<Vehicule> findAll();
+    List<VehiculeDTO> findAll();
 
-    Vehicule update(Long id, Vehicule entite);
+    VehiculeDTO update(Long id, VehiculeDTO entite);
 
-    Vehicule affecterVehiculeAAgence(Long idVehicule, Long idAgence);
+    VehiculeDTO affecterVehiculeAAgence(Long idVehicule, Long idAgence);
 
-    List<Vehicule> findByAgence(Long agenceId);
+    AgenceDTO findAgence(Long vehiculeId);
 
-    List<Vehicule> findByEquipement(Long equipementId);
+    List<VehiculeDTO> findByAgence(Long agenceId);
 
-    List<Equipement> findEquipements(Long vehiculeId);
+    List<VehiculeDTO> findByEquipement(Long equipementId);
+
+    List<EquipementDTO> findEquipements(Long vehiculeId);
 
     void ajouterEquipement(Long vehiculeId, Long equipementId);
 

@@ -3,19 +3,25 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Client;
+import tn.esprit.autoloc.dto.ClientDTO;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.exception.ResourceConflictException;
+import tn.esprit.autoloc.mapper.ClientMapper;
 import tn.esprit.autoloc.repository.IClientRepository;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ClientServiceImpl implements IClientService {
 
     private final IClientRepository clientRepository;
+    private final ClientMapper mapper;
 
     @Override
-    public Client create(Client entite) {
+    public ClientDTO create(ClientDTO dto) {
+        Client entite = mapper.toEntity(dto);
         if (entite.getIdClient() != null) {
             throw new IllegalArgumentException(
                     "Un nouveau client ne doit pas avoir d'identifiant");
@@ -24,23 +30,28 @@ public class ClientServiceImpl implements IClientService {
         if (clientRepository.existsByEmail(entite.getEmail())) {
             throw new ResourceConflictException("Cette adresse e-mail est déjà utilisée.");
         }
-        return clientRepository.save(entite);
+        return mapper.toDto(clientRepository.save(entite));
     }
 
     @Override
-    public Client findById(Long id) {
+    public ClientDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Client findEntity(Long id) {
         return clientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Client", id));
     }
 
     @Override
-    public List<Client> findAll() {
-        return clientRepository.findAll();
+    public List<ClientDTO> findAll() {
+        return clientRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public Client update(Long id, Client entite) {
-        Client existant = findById(id);
+    public ClientDTO update(Long id, ClientDTO dto) {
+        Client entite = mapper.toEntity(dto);
+        Client existant = findEntity(id);
         valider(entite);
         if (clientRepository.existsByEmailAndIdClientNot(entite.getEmail(), id)) {
             throw new ResourceConflictException("Cette adresse e-mail est déjà utilisée.");
@@ -51,7 +62,7 @@ public class ClientServiceImpl implements IClientService {
         existant.setTelephone(entite.getTelephone());
         existant.setNumPermis(entite.getNumPermis());
         existant.setDateInscription(entite.getDateInscription());
-        return clientRepository.save(existant);
+        return mapper.toDto(clientRepository.save(existant));
     }
 
     @Override

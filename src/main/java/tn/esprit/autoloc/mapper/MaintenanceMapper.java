@@ -1,30 +1,15 @@
 package tn.esprit.autoloc.mapper;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import tn.esprit.autoloc.domain.Maintenance;
 import tn.esprit.autoloc.dto.MaintenanceDTO;
-import tn.esprit.autoloc.exception.ResourceNotFoundException;
-import tn.esprit.autoloc.repository.IVehiculeRepository;
 
-@Component
-@RequiredArgsConstructor
-public class MaintenanceMapper {
-    private final IVehiculeRepository vehiculeRepository;
+@Mapper(componentModel = "spring", uses = EntityReferenceMapper.class)
+public interface MaintenanceMapper {
+    @Mapping(target = "vehiculeId", source = "vehicule.idVehicule")
+    MaintenanceDTO toDto(Maintenance entity);
 
-    public MaintenanceDTO toDto(Maintenance entity) {
-        return new MaintenanceDTO(entity.getIdMaintenance(), entity.getDateDebut(), entity.getDateFin(),
-                entity.getDescription(), entity.getVehicule() == null ? null : entity.getVehicule().getIdVehicule());
-    }
-
-    public Maintenance toEntity(MaintenanceDTO dto) {
-        Maintenance entity = new Maintenance();
-        entity.setIdMaintenance(dto.idMaintenance());
-        entity.setDateDebut(dto.dateDebut());
-        entity.setDateFin(dto.dateFin());
-        entity.setDescription(dto.description());
-        entity.setVehicule(vehiculeRepository.findById(dto.vehiculeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicule", dto.vehiculeId())));
-        return entity;
-    }
+    @Mapping(target = "vehicule", source = "vehiculeId")
+    Maintenance toEntity(MaintenanceDTO dto);
 }
