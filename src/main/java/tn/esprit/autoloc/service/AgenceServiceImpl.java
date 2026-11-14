@@ -42,7 +42,6 @@ public class AgenceServiceImpl implements IAgenceService {
         existant.setVille(entite.getVille());
         existant.setAdresse(entite.getAdresse());
         existant.setTelephone(entite.getTelephone());
-        // les associations (liens) seront gérées au Chapitre 9
         return agenceRepository.save(existant);
     }
 

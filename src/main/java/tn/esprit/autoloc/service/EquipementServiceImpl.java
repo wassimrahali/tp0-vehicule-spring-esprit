@@ -39,7 +39,6 @@ public class EquipementServiceImpl implements IEquipementService {
         Equipement existant = findById(id);
         valider(entite);
         existant.setLibelle(entite.getLibelle());
-        // les associations (liens) seront gérées au Chapitre 9
         return equipementRepository.save(existant);
     }
 

@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Employe;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IEmployeRepository;
+import tn.esprit.autoloc.repository.IAgenceRepository;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeServiceImpl implements IEmployeService {
 
     private final IEmployeRepository employeRepository;
+    private final IAgenceRepository agenceRepository;
 
     @Override
     public Employe create(Employe entite) {
@@ -41,8 +43,24 @@ public class EmployeServiceImpl implements IEmployeService {
         existant.setNom(entite.getNom());
         existant.setPrenom(entite.getPrenom());
         existant.setRole(entite.getRole());
-        // les associations (liens) seront gérées au Chapitre 9
+        existant.setAgence(entite.getAgence());
         return employeRepository.save(existant);
+    }
+
+    @Override
+    public List<Employe> findByAgence(Long agenceId) {
+        if (!agenceRepository.existsById(agenceId)) {
+            throw new ResourceNotFoundException("Agence", agenceId);
+        }
+        return employeRepository.findByAgence_IdAgence(agenceId);
+    }
+
+    @Override
+    public Employe affecterAgence(Long employeId, Long agenceId) {
+        Employe employe = findById(employeId);
+        employe.setAgence(agenceRepository.findById(agenceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agence", agenceId)));
+        return employeRepository.save(employe);
     }
 
     @Override
@@ -62,6 +80,9 @@ public class EmployeServiceImpl implements IEmployeService {
         }
         if (e.getRole() == null) {
             throw new IllegalArgumentException("Le rôle de l'employé est obligatoire");
+        }
+        if (e.getAgence() == null) {
+            throw new IllegalArgumentException("Un employé doit être affecté à une agence");
         }
     }
 }

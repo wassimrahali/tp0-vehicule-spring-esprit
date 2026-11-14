@@ -13,5 +13,7 @@ public interface IContratService {
 
     Contrat update(Long id, Contrat entite);
 
+    Contrat findByReservation(Long reservationId);
+
     void deleteById(Long id);
 }

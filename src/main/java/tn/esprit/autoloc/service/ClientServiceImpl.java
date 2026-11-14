@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Client;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
+import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.repository.IClientRepository;
 
 @Service
@@ -20,6 +21,9 @@ public class ClientServiceImpl implements IClientService {
                     "Un nouveau client ne doit pas avoir d'identifiant");
         }
         valider(entite);
+        if (clientRepository.existsByEmail(entite.getEmail())) {
+            throw new ResourceConflictException("Cette adresse e-mail est déjà utilisée.");
+        }
         return clientRepository.save(entite);
     }
 
@@ -38,13 +42,15 @@ public class ClientServiceImpl implements IClientService {
     public Client update(Long id, Client entite) {
         Client existant = findById(id);
         valider(entite);
+        if (clientRepository.existsByEmailAndIdClientNot(entite.getEmail(), id)) {
+            throw new ResourceConflictException("Cette adresse e-mail est déjà utilisée.");
+        }
         existant.setNom(entite.getNom());
         existant.setPrenom(entite.getPrenom());
         existant.setEmail(entite.getEmail());
         existant.setTelephone(entite.getTelephone());
         existant.setNumPermis(entite.getNumPermis());
         existant.setDateInscription(entite.getDateInscription());
-        // les associations (liens) seront gérées au Chapitre 9
         return clientRepository.save(existant);
     }
 

@@ -33,7 +33,8 @@ public class Maintenance {
     @Schema(description = "Description détaillée de la maintenance réalisée.", example = "Changement de pneus et contrôle du freinage")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Véhicule concerné par la maintenance.")
     private Vehicule vehicule;
 }

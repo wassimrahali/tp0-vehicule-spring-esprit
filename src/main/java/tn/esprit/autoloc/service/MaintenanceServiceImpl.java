@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Maintenance;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IMaintenanceRepository;
+import tn.esprit.autoloc.repository.IVehiculeRepository;
 
 @Service
 @RequiredArgsConstructor
 public class MaintenanceServiceImpl implements IMaintenanceService {
 
     private final IMaintenanceRepository maintenanceRepository;
+    private final IVehiculeRepository vehiculeRepository;
 
     @Override
     public Maintenance create(Maintenance entite) {
@@ -41,8 +43,16 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         existant.setDateDebut(entite.getDateDebut());
         existant.setDateFin(entite.getDateFin());
         existant.setDescription(entite.getDescription());
-        // les associations (liens) seront gérées au Chapitre 9
+        existant.setVehicule(entite.getVehicule());
         return maintenanceRepository.save(existant);
+    }
+
+    @Override
+    public List<Maintenance> findByVehicule(Long vehiculeId) {
+        if (!vehiculeRepository.existsById(vehiculeId)) {
+            throw new ResourceNotFoundException("Vehicule", vehiculeId);
+        }
+        return maintenanceRepository.findByVehicule_IdVehicule(vehiculeId);
     }
 
     @Override
@@ -57,8 +67,11 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
         if (e.getDateDebut() == null) {
             throw new IllegalArgumentException("La date de début est obligatoire");
         }
-        if (e.getDateFin() != null && e.getDateFin().isBefore(e.getDateDebut())) {
-            throw new IllegalArgumentException("La date de fin ne peut pas précéder la date de début");
+        if (e.getDateFin() != null && !e.getDateFin().isAfter(e.getDateDebut())) {
+            throw new IllegalArgumentException("La date de fin doit être postérieure à la date de début");
+        }
+        if (e.getVehicule() == null) {
+            throw new IllegalArgumentException("La maintenance doit être liée à un véhicule");
         }
     }
 }
