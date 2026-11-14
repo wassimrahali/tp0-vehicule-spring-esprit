@@ -13,5 +13,9 @@ public interface IEmployeService {
 
     Employe update(Long id, Employe entite);
 
+    List<Employe> findByAgence(Long agenceId);
+
+    Employe affecterAgence(Long employeId, Long agenceId);
+
     void deleteById(Long id);
 }

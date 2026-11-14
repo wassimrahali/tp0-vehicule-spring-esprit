@@ -35,7 +35,8 @@ public class Paiement {
     @Schema(description = "Mode de paiement utilisé.", allowableValues = {"CARTE", "ESPECES", "VIREMENT"})
     private ModePaiement modePaiement;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Contrat associé au paiement.")
     private Contrat contrat;
 }

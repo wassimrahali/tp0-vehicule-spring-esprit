@@ -35,7 +35,8 @@ public class Contrat {
     @Schema(description = "Indique si le contrat est validé.", example = "true")
     private boolean valide;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false, unique = true)
     @Schema(description = "Réservation associée au contrat.")
     private Reservation reservation;
 

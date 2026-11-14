@@ -1,83 +1,58 @@
 package tn.esprit.autoloc.controller;
 
-import java.util.List;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.autoloc.domain.Equipement;
+import tn.esprit.autoloc.dto.EquipementDTO;
+import tn.esprit.autoloc.mapper.EquipementMapper;
+import tn.esprit.autoloc.dto.VehiculeDTO;
+import tn.esprit.autoloc.mapper.VehiculeMapper;
+import tn.esprit.autoloc.service.IVehiculeService;
 import tn.esprit.autoloc.service.IEquipementService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/equipements")
 @RequiredArgsConstructor
-@Tag(name = "Equipement", description = "Gestion des équipements du parc automobile")
+@Tag(name = "Équipement", description = "Gestion des équipements et des véhicules associés")
 public class EquipementController {
-
-    private final IEquipementService equipementService;
+    private final IEquipementService service;
+    private final EquipementMapper mapper;
+    private final IVehiculeService vehiculeService;
+    private final VehiculeMapper vehiculeMapper;
 
     @PostMapping
-    @Operation(summary = "Créer un équipement", description = "Ajoute un nouvel équipement disponible pour les véhicules.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Équipement créé avec succès."),
-            @ApiResponse(responseCode = "400", description = "Données invalides."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Equipement create(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Informations de l'équipement à créer.", required = true)
-                            @RequestBody Equipement equipement) {
-        return equipementService.create(equipement);
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Consulter un équipement", description = "Retourne les détails d'un équipement selon son ID.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Équipement trouvé."),
-            @ApiResponse(responseCode = "404", description = "Équipement introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Equipement findById(@Parameter(description = "Identifiant de l'équipement", required = true, example = "1")
-                              @PathVariable Long id) {
-        return equipementService.findById(id);
+    @ResponseStatus(HttpStatus.CREATED)
+    public EquipementDTO create(@Valid @RequestBody EquipementDTO dto) {
+        return mapper.toDto(service.create(mapper.toEntity(dto)));
     }
 
     @GetMapping
-    @Operation(summary = "Lister les équipements", description = "Retourne la liste complète des équipements disponibles.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste des équipements récupérée avec succès."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public List<Equipement> findAll() {
-        return equipementService.findAll();
+    public List<EquipementDTO> findAll() {
+        return service.findAll().stream().map(mapper::toDto).toList();
+    }
+
+    @GetMapping("/{id}")
+    public EquipementDTO findById(@PathVariable Long id) {
+        return mapper.toDto(service.findById(id));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour un équipement", description = "Modifie les informations d'un équipement existant.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Équipement mis à jour avec succès."),
-            @ApiResponse(responseCode = "404", description = "Équipement introuvable."),
-            @ApiResponse(responseCode = "400", description = "Données invalides."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Equipement update(@Parameter(description = "Identifiant de l'équipement à mettre à jour", required = true, example = "1")
-                            @PathVariable Long id,
-                            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Nouvelles informations de l'équipement.", required = true)
-                            @RequestBody Equipement equipement) {
-        return equipementService.update(id, equipement);
+    public EquipementDTO update(@PathVariable Long id, @Valid @RequestBody EquipementDTO dto) {
+        return mapper.toDto(service.update(id, mapper.toEntity(dto)));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer un équipement", description = "Supprime un équipement existant selon son identifiant unique.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Équipement supprimé avec succès."),
-            @ApiResponse(responseCode = "404", description = "Équipement introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public void deleteById(@Parameter(description = "Identifiant de l'équipement à supprimer", required = true, example = "1")
-                          @PathVariable Long id) {
-        equipementService.deleteById(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.deleteById(id);
+    }
+
+    @GetMapping("/{id}/vehicules")
+    public List<VehiculeDTO> vehicules(@PathVariable Long id) {
+        return vehiculeService.findByEquipement(id).stream().map(vehiculeMapper::toDto).toList();
     }
 }

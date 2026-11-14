@@ -52,7 +52,8 @@ public class Vehicule {
     @Schema(description = "Statut actuel du véhicule.", allowableValues = {"DISPONIBLE", "LOUE", "MAINTENANCE"})
     private StatutVehicule statut;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Agence affectée au véhicule.")
     private Agence agence;
 

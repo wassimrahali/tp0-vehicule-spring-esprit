@@ -34,7 +34,8 @@ public class Employe {
     @Schema(description = "Rôle de l'employé.", allowableValues = {"AGENT", "MANAGER"})
     private RoleEmploye role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Agence à laquelle l'employé est rattaché.")
     private Agence agence;
 }

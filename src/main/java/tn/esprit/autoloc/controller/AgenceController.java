@@ -1,83 +1,84 @@
 package tn.esprit.autoloc.controller;
 
-import java.util.List;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.autoloc.domain.Agence;
+import tn.esprit.autoloc.dto.AgenceDTO;
+import tn.esprit.autoloc.dto.EmployeDTO;
+import tn.esprit.autoloc.dto.VehiculeDTO;
+import tn.esprit.autoloc.mapper.AgenceMapper;
+import tn.esprit.autoloc.mapper.EmployeMapper;
+import tn.esprit.autoloc.mapper.VehiculeMapper;
+import tn.esprit.autoloc.service.IEmployeService;
 import tn.esprit.autoloc.service.IAgenceService;
+import tn.esprit.autoloc.service.IVehiculeService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/agences")
 @RequiredArgsConstructor
-@Tag(name = "Agence", description = "Gestion des agences de location")
+@Tag(name = "Agence", description = "Gestion des agences, véhicules et employés rattachés")
 public class AgenceController {
-
-    private final IAgenceService agenceService;
+    private final IAgenceService service;
+    private final AgenceMapper mapper;
+    private final IVehiculeService vehiculeService;
+    private final VehiculeMapper vehiculeMapper;
+    private final IEmployeService employeService;
+    private final EmployeMapper employeMapper;
 
     @PostMapping
-    @Operation(summary = "Créer une agence", description = "Crée une nouvelle agence avec ses informations de base.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Agence créée avec succès."),
-            @ApiResponse(responseCode = "400", description = "Données invalides ou agence incomplète."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Agence create(@io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Objet agence à créer, sans identifiant.", required = true) @RequestBody Agence agence) {
-        return agenceService.create(agence);
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Consulter une agence par identifiant", description = "Retourne les détails complets d'une agence selon son ID.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Agence trouvée."),
-            @ApiResponse(responseCode = "404", description = "Agence introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Agence findById(@Parameter(description = "Identifiant unique de l'agence", required = true, example = "1")
-                           @PathVariable Long id) {
-        return agenceService.findById(id);
+    @ResponseStatus(HttpStatus.CREATED)
+    public AgenceDTO create(@Valid @RequestBody AgenceDTO dto) {
+        return mapper.toDto(service.create(mapper.toEntity(dto)));
     }
 
     @GetMapping
-    @Operation(summary = "Lister les agences", description = "Retourne la liste complète de toutes les agences enregistrées.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste des agences récupérée avec succès."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public List<Agence> findAll() {
-        return agenceService.findAll();
+    public List<AgenceDTO> findAll() {
+        return service.findAll().stream().map(mapper::toDto).toList();
+    }
+
+    @GetMapping("/{id}")
+    public AgenceDTO findById(@PathVariable Long id) {
+        return mapper.toDto(service.findById(id));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour une agence", description = "Modifie les informations d'une agence existante selon son ID.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Agence mise à jour avec succès."),
-            @ApiResponse(responseCode = "404", description = "Agence introuvable."),
-            @ApiResponse(responseCode = "400", description = "Données de mise à jour invalides."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Agence update(@Parameter(description = "Identifiant de l'agence à mettre à jour", required = true, example = "1")
-                        @PathVariable Long id,
-                        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Nouvelles informations de l'agence.", required = true)
-                        @RequestBody Agence agence) {
-        return agenceService.update(id, agence);
+    public AgenceDTO update(@PathVariable Long id, @Valid @RequestBody AgenceDTO dto) {
+        return mapper.toDto(service.update(id, mapper.toEntity(dto)));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer une agence", description = "Supprime une agence existante selon son identifiant unique.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Agence supprimée avec succès."),
-            @ApiResponse(responseCode = "404", description = "Agence introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public void deleteById(@Parameter(description = "Identifiant de l'agence à supprimer", required = true, example = "1")
-                          @PathVariable Long id) {
-        agenceService.deleteById(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.deleteById(id);
+    }
+
+    @GetMapping("/{agenceId}/vehicules")
+    public List<VehiculeDTO> vehicules(@PathVariable Long agenceId) {
+        return vehiculeService.findByAgence(agenceId).stream().map(vehiculeMapper::toDto).toList();
+    }
+
+    @PostMapping("/{agenceId}/vehicules/{vehiculeId}")
+    public VehiculeDTO affecterVehicule(@PathVariable Long agenceId, @PathVariable Long vehiculeId) {
+        return vehiculeMapper.toDto(vehiculeService.affecterVehiculeAAgence(vehiculeId, agenceId));
+    }
+
+    @DeleteMapping("/{agenceId}/vehicules/{vehiculeId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void retirerVehicule(@PathVariable Long agenceId, @PathVariable Long vehiculeId) {
+        vehiculeService.retirerDeAgence(agenceId, vehiculeId);
+    }
+
+    @GetMapping("/{agenceId}/employes")
+    public List<EmployeDTO> employes(@PathVariable Long agenceId) {
+        return employeService.findByAgence(agenceId).stream().map(employeMapper::toDto).toList();
+    }
+
+    @PostMapping("/{agenceId}/employes/{employeId}")
+    public EmployeDTO affecterEmploye(@PathVariable Long agenceId, @PathVariable Long employeId) {
+        return employeMapper.toDto(employeService.affecterAgence(employeId, agenceId));
     }
 }

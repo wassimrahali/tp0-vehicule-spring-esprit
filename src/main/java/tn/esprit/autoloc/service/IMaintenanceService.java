@@ -13,5 +13,7 @@ public interface IMaintenanceService {
 
     Maintenance update(Long id, Maintenance entite);
 
+    List<Maintenance> findByVehicule(Long vehiculeId);
+
     void deleteById(Long id);
 }

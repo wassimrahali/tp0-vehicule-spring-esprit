@@ -1,83 +1,53 @@
 package tn.esprit.autoloc.controller;
 
-import java.util.List;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.autoloc.domain.Employe;
+import tn.esprit.autoloc.dto.EmployeDTO;
+import tn.esprit.autoloc.mapper.EmployeMapper;
 import tn.esprit.autoloc.service.IEmployeService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/employes")
 @RequiredArgsConstructor
-@Tag(name = "Employé", description = "Gestion des employés")
+@Tag(name = "Employé", description = "Gestion des employés et de leur agence")
 public class EmployeController {
-
-    private final IEmployeService employeService;
+    private final IEmployeService service;
+    private final EmployeMapper mapper;
 
     @PostMapping
-    @Operation(summary = "Créer un employé", description = "Crée un nouvel employé et l'associe à son agence et son rôle.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employé créé avec succès."),
-            @ApiResponse(responseCode = "400", description = "Données invalides."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Employe create(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Informations de l'employé à créer.", required = true)
-                         @RequestBody Employe employe) {
-        return employeService.create(employe);
-    }
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Consulter un employé", description = "Retourne les détails d'un employé selon son identifiant.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employé trouvé."),
-            @ApiResponse(responseCode = "404", description = "Employé introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Employe findById(@Parameter(description = "Identifiant de l'employé", required = true, example = "1")
-                           @PathVariable Long id) {
-        return employeService.findById(id);
+    @ResponseStatus(HttpStatus.CREATED)
+    public EmployeDTO create(@Valid @RequestBody EmployeDTO dto) {
+        return mapper.toDto(service.create(mapper.toEntity(dto)));
     }
 
     @GetMapping
-    @Operation(summary = "Lister les employés", description = "Retourne tous les employés enregistrés dans le système.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste des employés récupérée avec succès."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public List<Employe> findAll() {
-        return employeService.findAll();
+    public List<EmployeDTO> findAll() {
+        return service.findAll().stream().map(mapper::toDto).toList();
+    }
+
+    @GetMapping("/{id}")
+    public EmployeDTO findById(@PathVariable Long id) {
+        return mapper.toDto(service.findById(id));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Mettre à jour un employé", description = "Met à jour les informations d'un employé existant.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employé mis à jour avec succès."),
-            @ApiResponse(responseCode = "404", description = "Employé introuvable."),
-            @ApiResponse(responseCode = "400", description = "Données invalides."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public Employe update(@Parameter(description = "Identifiant de l'employé à mettre à jour", required = true, example = "1")
-                         @PathVariable Long id,
-                         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Nouvelles informations de l'employé.", required = true)
-                         @RequestBody Employe employe) {
-        return employeService.update(id, employe);
+    public EmployeDTO update(@PathVariable Long id, @Valid @RequestBody EmployeDTO dto) {
+        return mapper.toDto(service.update(id, mapper.toEntity(dto)));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer un employé", description = "Supprime un employé existant selon son identifiant unique.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employé supprimé avec succès."),
-            @ApiResponse(responseCode = "404", description = "Employé introuvable."),
-            @ApiResponse(responseCode = "500", description = "Erreur interne du serveur.")
-    })
-    public void deleteById(@Parameter(description = "Identifiant de l'employé à supprimer", required = true, example = "1")
-                          @PathVariable Long id) {
-        employeService.deleteById(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        service.deleteById(id);
+    }
+
+    @PutMapping("/{employeId}/agence/{agenceId}")
+    public EmployeDTO affecterAgence(@PathVariable Long employeId, @PathVariable Long agenceId) {
+        return mapper.toDto(service.affecterAgence(employeId, agenceId));
     }
 }

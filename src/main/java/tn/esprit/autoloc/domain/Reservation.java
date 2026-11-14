@@ -35,11 +35,13 @@ public class Reservation {
     @Schema(description = "Statut actuel de la réservation.", allowableValues = {"EN_ATTENTE", "CONFIRMEE", "ANNULEE", "TERMINEE"})
     private StatutReservation statut;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Client ayant effectué la réservation.")
     private Client client;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     @Schema(description = "Véhicule réservé.")
     private Vehicule vehicule;
 
