@@ -10,23 +10,28 @@ import tn.esprit.autoloc.domain.StatutVehicule;
 import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.domain.StatutReservation;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.ReservationDTO;
 import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IReservationRepository;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
 import tn.esprit.autoloc.repository.IClientRepository;
+import tn.esprit.autoloc.mapper.ReservationMapper;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ReservationServiceImpl implements IReservationService {
 
     private final IReservationRepository reservationRepository;
     private final IVehiculeRepository vehiculeRepository;
     private final IClientRepository clientRepository;
+    private final ReservationMapper mapper;
 
     @Override
     @Transactional
-    public Reservation create(Reservation entite) {
+    public ReservationDTO create(ReservationDTO dto) {
+        Reservation entite = mapper.toEntity(dto);
         if (entite.getIdReservation() != null) {
             throw new IllegalArgumentException(
                     "Un nouveau reservation ne doit pas avoir d'identifiant");
@@ -37,24 +42,29 @@ public class ReservationServiceImpl implements IReservationService {
             throw new IllegalArgumentException("Une réservation doit être créée en attente ou confirmée.");
         }
         assurerDisponibilite(entite, null);
-        return reservationRepository.save(entite);
+        return mapper.toDto(reservationRepository.save(entite));
     }
 
     @Override
-    public Reservation findById(Long id) {
+    public ReservationDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Reservation findEntity(Long id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation", id));
     }
 
     @Override
-    public List<Reservation> findAll() {
-        return reservationRepository.findAll();
+    public List<ReservationDTO> findAll() {
+        return reservationRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
     @Transactional
-    public Reservation update(Long id, Reservation entite) {
-        Reservation existant = findById(id);
+    public ReservationDTO update(Long id, ReservationDTO dto) {
+        Reservation entite = mapper.toEntity(dto);
+        Reservation existant = findEntity(id);
         valider(entite);
         if (existant.getStatut() != entite.getStatut() && !transitionAutorisee(existant.getStatut(), entite.getStatut())) {
             throw new ResourceConflictException("Transition de statut de réservation non autorisée.");
@@ -68,23 +78,23 @@ public class ReservationServiceImpl implements IReservationService {
         existant.setStatut(entite.getStatut());
         existant.setClient(entite.getClient());
         existant.setVehicule(entite.getVehicule());
-        return reservationRepository.save(existant);
+        return mapper.toDto(reservationRepository.save(existant));
     }
 
     @Override
-    public List<Reservation> findByClient(Long clientId) {
+    public List<ReservationDTO> findByClient(Long clientId) {
         if (!clientRepository.existsById(clientId)) {
             throw new ResourceNotFoundException("Client", clientId);
         }
-        return reservationRepository.findByClient_IdClient(clientId);
+        return reservationRepository.findByClient_IdClient(clientId).stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public List<Reservation> findByVehicule(Long vehiculeId) {
+    public List<ReservationDTO> findByVehicule(Long vehiculeId) {
         if (!vehiculeRepository.existsById(vehiculeId)) {
             throw new ResourceNotFoundException("Vehicule", vehiculeId);
         }
-        return reservationRepository.findByVehicule_IdVehicule(vehiculeId);
+        return reservationRepository.findByVehicule_IdVehicule(vehiculeId).stream().map(mapper::toDto).toList();
     }
 
     @Override
@@ -101,13 +111,13 @@ public class ReservationServiceImpl implements IReservationService {
 
     @Override
     @Transactional
-    public Reservation changerStatut(Long id, StatutReservation statut) {
-        Reservation reservation = findById(id);
+    public ReservationDTO changerStatut(Long id, StatutReservation statut) {
+        Reservation reservation = findEntity(id);
         if (statut == null) {
             throw new IllegalArgumentException("Le statut est obligatoire.");
         }
         if (statut == reservation.getStatut()) {
-            return reservation;
+            return mapper.toDto(reservation);
         }
         if (!transitionAutorisee(reservation.getStatut(), statut)) {
             throw new ResourceConflictException("Transition de statut de réservation non autorisée.");
@@ -116,11 +126,11 @@ public class ReservationServiceImpl implements IReservationService {
             assurerDisponibilite(reservation, id);
         }
         reservation.setStatut(statut);
-        return reservationRepository.save(reservation);
+        return mapper.toDto(reservationRepository.save(reservation));
     }
 
     @Override
-    public Reservation annuler(Long id) {
+    public ReservationDTO annuler(Long id) {
         return changerStatut(id, StatutReservation.ANNULEE);
     }
 

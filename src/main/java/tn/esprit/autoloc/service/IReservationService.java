@@ -3,27 +3,27 @@ package tn.esprit.autoloc.service;
 import java.util.List;
 import java.time.LocalDate;
 import tn.esprit.autoloc.domain.StatutReservation;
-import tn.esprit.autoloc.domain.Reservation;
+import tn.esprit.autoloc.dto.ReservationDTO;
 
 public interface IReservationService {
 
-    Reservation create(Reservation entite);
+    ReservationDTO create(ReservationDTO entite);
 
-    Reservation findById(Long id);
+    ReservationDTO findById(Long id);
 
-    List<Reservation> findAll();
+    List<ReservationDTO> findAll();
 
-    Reservation update(Long id, Reservation entite);
+    ReservationDTO update(Long id, ReservationDTO entite);
 
-    List<Reservation> findByClient(Long clientId);
+    List<ReservationDTO> findByClient(Long clientId);
 
-    List<Reservation> findByVehicule(Long vehiculeId);
+    List<ReservationDTO> findByVehicule(Long vehiculeId);
 
     boolean estDisponible(Long vehiculeId, LocalDate dateDebut, LocalDate dateFin);
 
-    Reservation changerStatut(Long id, StatutReservation statut);
+    ReservationDTO changerStatut(Long id, StatutReservation statut);
 
-    Reservation annuler(Long id);
+    ReservationDTO annuler(Long id);
 
     void deleteById(Long id);
 }

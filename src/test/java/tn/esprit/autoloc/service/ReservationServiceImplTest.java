@@ -10,9 +10,12 @@ import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.domain.StatutReservation;
 import tn.esprit.autoloc.domain.StatutVehicule;
 import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.dto.ReservationDTO;
 import tn.esprit.autoloc.exception.ResourceConflictException;
+import tn.esprit.autoloc.mapper.ReservationMapper;
 import tn.esprit.autoloc.repository.IReservationRepository;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
+import tn.esprit.autoloc.repository.IClientRepository;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -28,6 +31,10 @@ class ReservationServiceImplTest {
     private IReservationRepository reservationRepository;
     @Mock
     private IVehiculeRepository vehiculeRepository;
+    @Mock
+    private IClientRepository clientRepository;
+    @Mock
+    private ReservationMapper mapper;
     @InjectMocks
     private ReservationServiceImpl service;
 
@@ -37,8 +44,10 @@ class ReservationServiceImplTest {
         when(vehiculeRepository.findForUpdate(3L)).thenReturn(Optional.of(vehicule));
         when(reservationRepository.existsOverlappingReservation(eq(3L), any(), any(), anyCollection(), isNull()))
                 .thenReturn(true);
+        ReservationDTO dto = dto();
+        when(mapper.toEntity(dto)).thenReturn(reservation(vehicule));
 
-        assertThrows(ResourceConflictException.class, () -> service.create(reservation(vehicule)));
+        assertThrows(ResourceConflictException.class, () -> service.create(dto));
         verify(reservationRepository, never()).save(any());
     }
 
@@ -52,18 +61,24 @@ class ReservationServiceImplTest {
         when(reservationRepository.existsOverlappingReservation(eq(3L), any(), any(), anyCollection(), eq(14L)))
                 .thenReturn(false);
         when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDto(reservation)).thenReturn(new ReservationDTO(14L,
+                LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 4),
+                StatutReservation.CONFIRMEE, 1L, 3L, null));
 
-        Reservation confirmed = service.changerStatut(14L, StatutReservation.CONFIRMEE);
+        ReservationDTO confirmed = service.changerStatut(14L, StatutReservation.CONFIRMEE);
 
-        assertEquals(StatutReservation.CONFIRMEE, confirmed.getStatut());
+        assertEquals(StatutReservation.CONFIRMEE, confirmed.statut());
+        verify(reservationRepository).save(reservation);
     }
 
     @Test
     void rejectsEndDateThatDoesNotFollowStartDate() {
         Reservation reservation = reservation(vehicule());
         reservation.setDateFin(reservation.getDateDebut());
+        ReservationDTO dto = dto();
+        when(mapper.toEntity(dto)).thenReturn(reservation);
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(reservation));
+        assertThrows(IllegalArgumentException.class, () -> service.create(dto));
         verifyNoInteractions(reservationRepository);
     }
 
@@ -82,5 +97,10 @@ class ReservationServiceImplTest {
         reservation.setVehicule(vehicule);
         reservation.setClient(new Client());
         return reservation;
+    }
+
+    private ReservationDTO dto() {
+        return new ReservationDTO(null, LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 4),
+                StatutReservation.EN_ATTENTE, 1L, 3L, null);
     }
 }

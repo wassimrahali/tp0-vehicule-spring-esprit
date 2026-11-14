@@ -7,53 +7,63 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.domain.Paiement;
+import tn.esprit.autoloc.dto.PaiementDTO;
 import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IContratRepository;
 import tn.esprit.autoloc.repository.IPaiementRepository;
+import tn.esprit.autoloc.mapper.PaiementMapper;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaiementServiceImpl implements IPaiementService {
 
     private final IPaiementRepository paiementRepository;
     private final IContratRepository contratRepository;
+    private final PaiementMapper mapper;
 
     @Override
-    public Paiement findById(Long id) {
+    public PaiementDTO findById(Long id) {
+        return mapper.toDto(findEntity(id));
+    }
+
+    private Paiement findEntity(Long id) {
         return paiementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paiement", id));
     }
 
     @Override
-    public List<Paiement> findAll() {
-        return paiementRepository.findAll();
+    public List<PaiementDTO> findAll() {
+        return paiementRepository.findAll().stream().map(mapper::toDto).toList();
     }
 
     @Override
     @Transactional
-    public Paiement create(Paiement paiement) {
+    public PaiementDTO create(PaiementDTO dto) {
+        Paiement paiement = mapper.toEntity(dto);
         if (paiement.getIdPaiement() != null) {
             throw new IllegalArgumentException("Un nouveau paiement ne doit pas avoir d'identifiant.");
         }
         valider(paiement);
         assurerPlafond(paiement.getContrat(), paiement.getMontant(), BigDecimal.ZERO);
-        return paiementRepository.save(paiement);
+        return mapper.toDto(paiementRepository.save(paiement));
     }
 
     @Override
     @Transactional
-    public Paiement createForContrat(Long contratId, Paiement paiement) {
-        paiement.setContrat(contratRepository.findById(contratId)
-                .orElseThrow(() -> new ResourceNotFoundException("Contrat", contratId)));
-        paiement.setIdPaiement(null);
+    public PaiementDTO createForContrat(Long contratId, PaiementDTO paiement) {
+        if (!contratId.equals(paiement.contratId())) {
+            throw new IllegalArgumentException("L'identifiant de contrat ne correspond pas.");
+        }
         return create(paiement);
     }
 
     @Override
     @Transactional
-    public Paiement update(Long id, Paiement paiement) {
-        Paiement existing = findById(id);
+    public PaiementDTO update(Long id, PaiementDTO dto) {
+        Paiement paiement = mapper.toEntity(dto);
+        Paiement existing = findEntity(id);
         valider(paiement);
         BigDecimal deduction = existing.getContrat().getIdContrat().equals(paiement.getContrat().getIdContrat())
                 ? existing.getMontant() : BigDecimal.ZERO;
@@ -62,7 +72,7 @@ public class PaiementServiceImpl implements IPaiementService {
         existing.setDatePaiement(paiement.getDatePaiement());
         existing.setModePaiement(paiement.getModePaiement());
         existing.setContrat(paiement.getContrat());
-        return paiementRepository.save(existing);
+        return mapper.toDto(paiementRepository.save(existing));
     }
 
     @Override
@@ -74,11 +84,11 @@ public class PaiementServiceImpl implements IPaiementService {
     }
 
     @Override
-    public List<Paiement> findByContrat(Long contratId) {
+    public List<PaiementDTO> findByContrat(Long contratId) {
         if (!contratRepository.existsById(contratId)) {
             throw new ResourceNotFoundException("Contrat", contratId);
         }
-        return paiementRepository.findByContrat_IdContrat(contratId);
+        return paiementRepository.findByContrat_IdContrat(contratId).stream().map(mapper::toDto).toList();
     }
 
     @Override

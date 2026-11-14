@@ -1,19 +1,19 @@
 package tn.esprit.autoloc.service;
 
 import java.util.List;
-import tn.esprit.autoloc.domain.Maintenance;
+import tn.esprit.autoloc.dto.MaintenanceDTO;
 
 public interface IMaintenanceService {
 
-    Maintenance create(Maintenance entite);
+    MaintenanceDTO create(MaintenanceDTO entite);
 
-    Maintenance findById(Long id);
+    MaintenanceDTO findById(Long id);
 
-    List<Maintenance> findAll();
+    List<MaintenanceDTO> findAll();
 
-    Maintenance update(Long id, Maintenance entite);
+    MaintenanceDTO update(Long id, MaintenanceDTO entite);
 
-    List<Maintenance> findByVehicule(Long vehiculeId);
+    List<MaintenanceDTO> findByVehicule(Long vehiculeId);
 
     void deleteById(Long id);
 }
