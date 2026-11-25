@@ -15,5 +15,7 @@ public interface IContratService {
 
     ContratDTO findByReservation(Long reservationId);
 
+    List<ContratDTO> findByVehicule(Long vehiculeId);
+
     void deleteById(Long id);
 }

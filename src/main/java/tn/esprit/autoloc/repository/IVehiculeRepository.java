@@ -15,6 +15,8 @@ public interface IVehiculeRepository extends JpaRepository<Vehicule, Long> {
     boolean existsByImmatriculation(String immatriculation);
     boolean existsByImmatriculationAndIdVehiculeNot(String immatriculation, Long idVehicule);
     List<Vehicule> findByEquipements_IdEquipement(Long equipementId);
+    List<Vehicule> findByReservations_Contrat_IdContrat(Long contratId);
+    List<Vehicule> findByMaintenances_IdMaintenance(Long maintenanceId);
 
     @Query("select e.idEquipement from Vehicule v join v.equipements e where v.idVehicule = :id")
     List<Long> findEquipementIds(@Param("id") Long vehiculeId);

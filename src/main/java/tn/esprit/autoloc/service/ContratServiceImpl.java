@@ -12,6 +12,7 @@ import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.repository.IContratRepository;
 import tn.esprit.autoloc.repository.IPaiementRepository;
 import tn.esprit.autoloc.mapper.ContratMapper;
+import tn.esprit.autoloc.repository.IVehiculeRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class ContratServiceImpl implements IContratService {
 
     private final IContratRepository contratRepository;
     private final IPaiementRepository paiementRepository;
+    private final IVehiculeRepository vehiculeRepository;
     private final ContratMapper mapper;
 
     @Override
@@ -75,6 +77,15 @@ public class ContratServiceImpl implements IContratService {
         Contrat contrat = contratRepository.findByReservation_IdReservation(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contrat associé à la réservation", reservationId));
         return mapper.toDto(contrat);
+    }
+
+    @Override
+    public List<ContratDTO> findByVehicule(Long vehiculeId) {
+        if (!vehiculeRepository.existsById(vehiculeId)) {
+            throw new ResourceNotFoundException("Vehicule", vehiculeId);
+        }
+        return contratRepository.findByReservation_Vehicule_IdVehicule(vehiculeId).stream()
+                .map(mapper::toDto).toList();
     }
 
     @Override

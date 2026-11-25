@@ -3,6 +3,7 @@ package tn.esprit.autoloc.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import io.swagger.v3.oas.annotations.media.Schema;
+import tn.esprit.autoloc.validation.HuitChiffres;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,7 +15,7 @@ public record ClientDTO(
         @NotBlank String prenom,
         @NotBlank @Email String email,
         String telephone,
-        String numPermis,
+        @HuitChiffres String numPermis,
         LocalDate dateInscription,
         List<Long> reservationIds) {
 }

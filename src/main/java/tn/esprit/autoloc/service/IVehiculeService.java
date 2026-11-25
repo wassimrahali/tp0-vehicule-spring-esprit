@@ -25,6 +25,10 @@ public interface IVehiculeService {
 
     List<VehiculeDTO> findByEquipement(Long equipementId);
 
+    List<VehiculeDTO> findByContrat(Long contratId);
+
+    List<VehiculeDTO> findByMaintenance(Long maintenanceId);
+
     List<EquipementDTO> findEquipements(Long vehiculeId);
 
     void ajouterEquipement(Long vehiculeId, Long equipementId);

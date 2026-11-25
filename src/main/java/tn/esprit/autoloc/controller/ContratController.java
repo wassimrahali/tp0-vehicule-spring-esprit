@@ -54,6 +54,11 @@ public class ContratController {
         return service.findByReservation(reservationId);
     }
 
+    @GetMapping("/vehicule/{vehiculeId}")
+    public List<ContratDTO> contratsDuVehicule(@PathVariable Long vehiculeId) {
+        return service.findByVehicule(vehiculeId);
+    }
+
     @PostMapping("/{contratId}/paiements")
     @ResponseStatus(HttpStatus.CREATED)
     public PaiementDTO ajouterPaiement(@PathVariable Long contratId, @Valid @RequestBody PaiementDTO dto) {
