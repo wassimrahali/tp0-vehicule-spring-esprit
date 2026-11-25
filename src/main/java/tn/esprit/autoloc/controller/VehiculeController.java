@@ -47,6 +47,16 @@ public class VehiculeController {
         return maintenanceService.findByVehicule(id);
     }
 
+    @GetMapping("/contrat/{contratId}")
+    public List<VehiculeDTO> parContrat(@PathVariable Long contratId) {
+        return service.findByContrat(contratId);
+    }
+
+    @GetMapping("/maintenance/{maintenanceId}")
+    public List<VehiculeDTO> parMaintenance(@PathVariable Long maintenanceId) {
+        return service.findByMaintenance(maintenanceId);
+    }
+
     @PostMapping("/{id}/reservations")
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationDTO reserver(@PathVariable Long id, @Valid @RequestBody ReservationDTO dto) {

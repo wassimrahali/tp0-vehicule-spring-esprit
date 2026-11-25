@@ -9,6 +9,7 @@ import tn.esprit.autoloc.domain.Contrat;
 
 public interface IContratRepository extends JpaRepository<Contrat, Long> {
     java.util.Optional<Contrat> findByReservation_IdReservation(Long reservationId);
+    java.util.List<Contrat> findByReservation_Vehicule_IdVehicule(Long vehiculeId);
 
     @Query("select p.idPaiement from Paiement p where p.contrat.idContrat = :id")
     java.util.List<Long> findPaiementIds(@Param("id") Long contratId);

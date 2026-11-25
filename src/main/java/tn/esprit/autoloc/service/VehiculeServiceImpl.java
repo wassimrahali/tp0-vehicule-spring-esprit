@@ -13,7 +13,9 @@ import tn.esprit.autoloc.dto.EquipementDTO;
 import tn.esprit.autoloc.dto.AgenceDTO;
 import tn.esprit.autoloc.exception.ResourceConflictException;
 import tn.esprit.autoloc.repository.IAgenceRepository;
+import tn.esprit.autoloc.repository.IContratRepository;
 import tn.esprit.autoloc.repository.IEquipementRepository;
+import tn.esprit.autoloc.repository.IMaintenanceRepository;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
 import tn.esprit.autoloc.mapper.VehiculeMapper;
@@ -27,7 +29,9 @@ public class VehiculeServiceImpl implements IVehiculeService {
 
     private final IVehiculeRepository vehiculeRepository;
     private final IAgenceRepository agenceRepository;
+    private final IContratRepository contratRepository;
     private final IEquipementRepository equipementRepository;
+    private final IMaintenanceRepository maintenanceRepository;
     private final VehiculeMapper mapper;
     private final EquipementMapper equipementMapper;
     private final AgenceMapper agenceMapper;
@@ -120,6 +124,24 @@ public class VehiculeServiceImpl implements IVehiculeService {
             throw new ResourceNotFoundException("Equipement", equipementId);
         }
         return vehiculeRepository.findByEquipements_IdEquipement(equipementId).stream().map(mapper::toDto).toList();
+    }
+
+    @Override
+    public List<VehiculeDTO> findByContrat(Long contratId) {
+        if (!contratRepository.existsById(contratId)) {
+            throw new ResourceNotFoundException("Contrat", contratId);
+        }
+        return vehiculeRepository.findByReservations_Contrat_IdContrat(contratId).stream()
+                .map(mapper::toDto).toList();
+    }
+
+    @Override
+    public List<VehiculeDTO> findByMaintenance(Long maintenanceId) {
+        if (!maintenanceRepository.existsById(maintenanceId)) {
+            throw new ResourceNotFoundException("Maintenance", maintenanceId);
+        }
+        return vehiculeRepository.findByMaintenances_IdMaintenance(maintenanceId).stream()
+                .map(mapper::toDto).toList();
     }
 
     @Override
